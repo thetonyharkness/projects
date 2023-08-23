@@ -2,29 +2,55 @@
 
 import socket
 import termcolor
+import ipaddress
 
+def scan_ports(target, start_port, end_port):
+    open_ports = []
+    for port in range(start_port, end_port + 1):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        result = sock.connect_ex((target, port))
+        if result == 0:
+            open_ports.append(port)
+        sock.close()
+    return open_ports
 
-def scan(target, ports):
-	print('\n' + ' Starting Scan For ' + str(target))
-	for port in range(1,ports):
-		scan_port(target,port)
+def main():
+    print("Unique Port Scanner")
+    print("-------------------")
+    
+    targets = input("Enter the CIDR range or a comma-separated list of hostnames/IP addresses to scan: ")
+    target_list = targets.split(',')
+    
+    start_port = int(input("Enter the starting port: "))
+    end_port = int(input("Enter the ending port: "))
+    
+    for target in target_list:
+        target = target.strip()
+        print(f"\nScanning ports for {target}...")
+        
+        if '/' in target:  # CIDR range
+            ip_range = ipaddress.IPv4Network(target, strict=False)
+            for ip in ip_range.hosts():
+                open_ports = scan_ports(str(ip), start_port, end_port)
+                if open_ports:
+                    print(f"\n Open ports for {ip}:")
+                    for port in open_ports:
+                        print(termcolor.colored(f"[*]   Port {port} is open", 'green'))
+        else:  # Single host
+            open_ports = scan_ports(target, start_port, end_port)
+            if open_ports:
+                print("\n[*] Open ports:")
+                for port in open_ports:
+                    print(termcolor.colored(f"[*]   Port {port} is open", 'green'))
+            else:
+                print(f"No open ports found for {target}.")
 
+    scan_another = input("\nDo you want to scan another target? (yes/no): ")
+    if scan_another.lower() == "yes":
+        main()
+    else:
+        print("Exiting the port scanner.")
 
-def scan_port(ipaddress, port):
-	try:
-		sock = socket.socket()
-		sock.connect((ipaddress, port))
-		print("[+] Port Opened " + str(port))
-		sock.close()
-	except:
-		pass
-
-
-targets = input("[*] Enter Targets To Scan(split them by ,): ")
-ports = int(input("[*] Enter How Many Ports You Want To Scan: "))
-if ',' in targets:
-	print(termcolor.colored(("[*] Scanning Multiple Targets"), 'green'))
-	for ip_addr in targets.split(','):
-		scan(ip_addr.strip(' '), ports)
-else:
-	scan(targets,ports)
+if __name__ == "__main__":
+    main()
