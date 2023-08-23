@@ -3,6 +3,7 @@
 import socket
 import termcolor
 import ipaddress
+import pyfiglet
 
 def scan_ports(target, start_port, end_port):
     open_ports = []
@@ -16,10 +17,10 @@ def scan_ports(target, start_port, end_port):
     return open_ports
 
 def main():
-    print("Unique Port Scanner")
-    print("-------------------")
+    ascii_banner = pyfiglet.figlet_format("tony's port scanner")
+    print(ascii_banner)
     
-    targets = input("Enter the CIDR range or a comma-separated list of hostnames/IP addresses to scan: ")
+    targets = input("Enter the target(s) to scan: ")
     target_list = targets.split(',')
     
     start_port = int(input("Enter the starting port: "))
